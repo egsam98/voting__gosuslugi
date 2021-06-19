@@ -1,0 +1,8 @@
+version: "1"
+packages:
+  - name: "usersdb"
+    engine: "postgresql"
+    path: "db/repositories/usersdb"
+    queries: "db/schema/users.sql"
+    schema: "db/schema/users.sql"
+    emit_json_tags: true

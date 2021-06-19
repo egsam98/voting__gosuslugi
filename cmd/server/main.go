@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/pkg/errors"
@@ -44,14 +45,15 @@ func run() error {
 		return err
 	}
 
-	http.HandleFunc("/api/validate", rest.ValidateVote)
+	r := gin.Default()
+	r.POST("/api/validate", rest.ValidateVote)
 
 	sigint := make(chan os.Signal, 1)
 	signal.Notify(sigint, syscall.SIGINT)
 
 	srv := http.Server{
 		Addr:    envs.Web.Addr,
-		Handler: http.DefaultServeMux,
+		Handler: r,
 	}
 
 	go func() {

@@ -1,8 +1,9 @@
 package rest
 
 import (
-	"math/rand"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 var randStatusCode = map[int]int{
@@ -10,7 +11,7 @@ var randStatusCode = map[int]int{
 	1: http.StatusBadRequest,
 }
 
-func ValidateVote(w http.ResponseWriter, _ *http.Request) {
-	key := rand.Intn(2)
-	w.WriteHeader(randStatusCode[key])
+func ValidateVote(ctx *gin.Context) {
+	//key := rand.Intn(2)
+	ctx.Status(randStatusCode[1])
 }
