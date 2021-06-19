@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/joho/godotenv"
@@ -81,10 +83,30 @@ func run() error {
 		}
 	}()
 
-	return seed(&users.Service{}, repositories.New(db))
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	seedErr := make(chan error)
+	go func() {
+		seedErr <- seed(ctx, &users.Service{}, repositories.New(db))
+	}()
+
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, syscall.SIGINT)
+
+	select {
+	case err := <-seedErr:
+		return err
+	case sig := <-shutdown:
+		log.Info().Msg("main: Cancel seeding...")
+		cancel()
+		log.Info().Msgf("main: Shutdown by signal %s", sig)
+	}
+
+	return nil
 }
 
-func seed(users *users.Service, r *repositories.Repositories) error {
+func seed(ctx context.Context, users *users.Service, r *repositories.Repositories) error {
 	randUsers := make([]usersdb.CreateParams, envs.Count)
 	for i := range randUsers {
 		randUsers[i] = usersdb.CreateParams{
@@ -95,7 +117,7 @@ func seed(users *users.Service, r *repositories.Repositories) error {
 		}
 	}
 
-	if err := users.CreateMany(context.Background(), r, randUsers); err != nil {
+	if err := users.CreateMany(ctx, r, randUsers); err != nil {
 		return err
 	}
 
