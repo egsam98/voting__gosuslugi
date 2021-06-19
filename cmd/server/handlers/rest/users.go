@@ -7,18 +7,18 @@ import (
 
 	users2 "github.com/egsam98/voting/gosuslugi/cmd/server/handlers/rest/requests/users"
 	responses "github.com/egsam98/voting/gosuslugi/cmd/server/handlers/rest/responses/users"
-	"github.com/egsam98/voting/gosuslugi/db/repositories"
+	"github.com/egsam98/voting/gosuslugi/db/queriesdb"
 	"github.com/egsam98/voting/gosuslugi/internal/web"
 	"github.com/egsam98/voting/gosuslugi/services/users"
 )
 
 type usersController struct {
 	users *users.Service
-	r     *repositories.Repositories
+	q     *queriesdb.Queries
 }
 
-func newUsersController(users *users.Service, r *repositories.Repositories) *usersController {
-	return &usersController{users: users, r: r}
+func newUsersController(users *users.Service, q *queriesdb.Queries) *usersController {
+	return &usersController{users: users, q: q}
 }
 
 func (uc *usersController) FindByPassport(w http.ResponseWriter, r *http.Request) {
@@ -28,7 +28,7 @@ func (uc *usersController) FindByPassport(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	user, err := uc.users.FindByPassport(r.Context(), uc.r, req.Passport)
+	user, err := uc.users.FindByPassport(r.Context(), uc.q, req.Passport)
 	if err != nil {
 		web.RespondError(w, r, err)
 		return

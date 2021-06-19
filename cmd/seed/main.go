@@ -16,8 +16,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/rs/zerolog/pkgerrors"
 
-	"github.com/egsam98/voting/gosuslugi/db/repositories"
-	"github.com/egsam98/voting/gosuslugi/db/repositories/usersdb"
+	"github.com/egsam98/voting/gosuslugi/db/queriesdb"
+	"github.com/egsam98/voting/gosuslugi/db/queriesdb/usersdb"
 	"github.com/egsam98/voting/gosuslugi/internal/dbext"
 	"github.com/egsam98/voting/gosuslugi/internal/randext"
 	"github.com/egsam98/voting/gosuslugi/services/users"
@@ -85,7 +85,7 @@ func run() error {
 
 	seedErr := make(chan error)
 	go func() {
-		seedErr <- seed(ctx, &users.Service{}, repositories.New(db))
+		seedErr <- seed(ctx, &users.Service{}, queriesdb.New(db))
 	}()
 
 	shutdown := make(chan os.Signal, 1)
@@ -103,7 +103,7 @@ func run() error {
 	return nil
 }
 
-func seed(ctx context.Context, users *users.Service, r *repositories.Repositories) error {
+func seed(ctx context.Context, users *users.Service, r *queriesdb.Queries) error {
 	randUsers := make([]usersdb.CreateParams, envs.Count)
 	for i := range randUsers {
 		randUsers[i] = usersdb.CreateParams{

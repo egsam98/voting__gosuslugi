@@ -1,27 +1,27 @@
-package repositories
+package queriesdb
 
 import (
 	"github.com/pkg/errors"
 
-	"github.com/egsam98/voting/gosuslugi/db/repositories/usersdb"
+	"github.com/egsam98/voting/gosuslugi/db/queriesdb/usersdb"
 	"github.com/egsam98/voting/gosuslugi/internal/sqalx"
 )
 
-type Repositories struct {
+type Queries struct {
 	dbtx  sqalx.Node
 	Users usersdb.Querier
 }
 
-func New(db sqalx.Node) *Repositories {
-	return &Repositories{
+func New(db sqalx.Node) *Queries {
+	return &Queries{
 		dbtx:  db,
 		Users: usersdb.New(db),
 	}
 }
 
 // ExecuteTx runs function with new database tx
-func (r *Repositories) ExecuteTx(f func(r *Repositories) error) error {
-	tx, err := r.dbtx.Beginx()
+func (q *Queries) ExecuteTx(f func(*Queries) error) error {
+	tx, err := q.dbtx.Beginx()
 	if err != nil {
 		return errors.Wrap(err, "failed to begin database tx")
 	}

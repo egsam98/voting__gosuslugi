@@ -8,12 +8,12 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 
-	"github.com/egsam98/voting/gosuslugi/db/repositories"
+	"github.com/egsam98/voting/gosuslugi/db/queriesdb"
 	"github.com/egsam98/voting/gosuslugi/services/users"
 )
 
-func API(users *users.Service, r *repositories.Repositories) http.Handler {
-	uc := newUsersController(users, r)
+func API(users *users.Service, q *queriesdb.Queries) http.Handler {
+	uc := newUsersController(users, q)
 
 	mux := chi.NewMux()
 

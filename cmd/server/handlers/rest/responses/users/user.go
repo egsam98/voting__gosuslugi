@@ -1,7 +1,7 @@
 package responses
 
 import (
-	"github.com/egsam98/voting/gosuslugi/db/repositories/usersdb"
+	"github.com/egsam98/voting/gosuslugi/db/queriesdb/usersdb"
 )
 
 type User struct {

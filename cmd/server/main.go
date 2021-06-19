@@ -17,7 +17,7 @@ import (
 	"github.com/rs/zerolog/pkgerrors"
 
 	"github.com/egsam98/voting/gosuslugi/cmd/server/handlers/rest"
-	"github.com/egsam98/voting/gosuslugi/db/repositories"
+	"github.com/egsam98/voting/gosuslugi/db/queriesdb"
 	"github.com/egsam98/voting/gosuslugi/internal/dbext"
 	"github.com/egsam98/voting/gosuslugi/services/users"
 )
@@ -84,11 +84,11 @@ func run() error {
 		}
 	}()
 
-	r := repositories.New(db)
+	q := queriesdb.New(db)
 
 	srv := http.Server{
 		Addr:    envs.Web.Addr,
-		Handler: rest.API(&users.Service{}, r),
+		Handler: rest.API(&users.Service{}, q),
 	}
 
 	apiErr := make(chan error)
