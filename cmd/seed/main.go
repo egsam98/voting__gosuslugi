@@ -59,14 +59,11 @@ func run() error {
 	}
 
 	dbCfg := dbext.Config{
-		User:         envs.DB.User,
-		Password:     envs.DB.Password,
-		Host:         envs.DB.Host,
-		Name:         envs.DB.Name,
-		DisableTLS:   envs.DB.DisableTLS,
-		Logger:       nil,
-		MaxOpenConns: 0,
-		MaxIdleConns: 0,
+		User:       envs.DB.User,
+		Password:   envs.DB.Password,
+		Host:       envs.DB.Host,
+		Name:       envs.DB.Name,
+		DisableTLS: envs.DB.DisableTLS,
 	}
 	if envs.DB.Log {
 		dbCfg.Logger = dbext.NewZeroLogger(log.Logger)

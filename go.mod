@@ -3,8 +3,9 @@ module github.com/egsam98/voting/gosuslugi
 go 1.16
 
 require (
-	github.com/brianvoe/gofakeit/v6 v6.5.0 // indirect
-	github.com/gin-gonic/gin v1.7.2
+	github.com/brianvoe/gofakeit/v6 v6.5.0
+	github.com/go-chi/chi v1.5.4
+	github.com/go-chi/render v1.0.1
 	github.com/jmoiron/sqlx v1.3.4
 	github.com/joho/godotenv v1.3.0
 	github.com/kelseyhightower/envconfig v1.4.0

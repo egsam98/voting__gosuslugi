@@ -30,12 +30,12 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) error {
 	return err
 }
 
-const findByID = `-- name: FindByID :one
-select id, passport, fullname, birth_date, death_date from users where id = $1
+const findByPassport = `-- name: FindByPassport :one
+select id, passport, fullname, birth_date, death_date from users where passport = $1
 `
 
-func (q *Queries) FindByID(ctx context.Context, id int64) (User, error) {
-	row := q.db.QueryRowContext(ctx, findByID, id)
+func (q *Queries) FindByPassport(ctx context.Context, passport string) (User, error) {
+	row := q.db.QueryRowContext(ctx, findByPassport, passport)
 	var i User
 	err := row.Scan(
 		&i.ID,

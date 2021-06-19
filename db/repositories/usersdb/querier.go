@@ -6,7 +6,7 @@ import (
 
 type Querier interface {
 	Create(ctx context.Context, arg CreateParams) error
-	FindByID(ctx context.Context, id int64) (User, error)
+	FindByPassport(ctx context.Context, passport string) (User, error)
 }
 
 var _ Querier = (*Queries)(nil)

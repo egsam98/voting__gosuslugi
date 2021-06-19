@@ -6,8 +6,8 @@ create table users (
     death_date timestamp
 );
 
--- name: FindByID :one
-select * from users where id = $1;
+-- name: FindByPassport :one
+select * from users where passport = $1;
 
 -- name: Create :exec
 insert into users (passport, fullname, birth_date, death_date) values ($1, $2, $3, $4);

@@ -8,15 +8,18 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
+	_ "github.com/lib/pq"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/rs/zerolog/pkgerrors"
 
-	"github.com/egsam98/voting/gosuslugi/handlers/rest"
+	"github.com/egsam98/voting/gosuslugi/cmd/server/handlers/rest"
+	"github.com/egsam98/voting/gosuslugi/db/repositories"
+	"github.com/egsam98/voting/gosuslugi/internal/dbext"
+	"github.com/egsam98/voting/gosuslugi/services/users"
 )
 
 const serviceName = "Gosuslugi"
@@ -25,6 +28,20 @@ var envs struct {
 	Web struct {
 		Addr            string        `envconfig:"WEB_ADDR"`
 		ShutdownTimeout time.Duration `envconfig:"WEB_SHUTDOWN_TIMEOUT" default:"5s"`
+	}
+	DB struct {
+		// User is the username for the database
+		User string `envconfig:"DB_USER" default:"postgres"`
+		// Password is the password for the database
+		Password string `envconfig:"DB_PASSWORD" default:"postgres"`
+		// Host is the address of database
+		Host string `envconfig:"DB_HOST" default:"db"`
+		// Name is the database name to connect to
+		Name string `envconfig:"DB_NAME" default:"postgres"`
+		// DisableTLS is flag indicating to disable TLS
+		DisableTLS bool `envconfig:"DB_DISABLE_TLS" default:"true"`
+		// Log is flag to enable logging of SQL queries
+		Log bool `envconfig:"DB_LOG" default:"true"`
 	}
 }
 
@@ -45,34 +62,57 @@ func run() error {
 		return err
 	}
 
-	r := gin.Default()
-	r.POST("/api/validate", rest.ValidateVote)
-
-	sigint := make(chan os.Signal, 1)
-	signal.Notify(sigint, syscall.SIGINT)
-
-	srv := http.Server{
-		Addr:    envs.Web.Addr,
-		Handler: r,
+	dbCfg := dbext.Config{
+		User:       envs.DB.User,
+		Password:   envs.DB.Password,
+		Host:       envs.DB.Host,
+		Name:       envs.DB.Name,
+		DisableTLS: envs.DB.DisableTLS,
+	}
+	if envs.DB.Log {
+		dbCfg.Logger = dbext.NewZeroLogger(log.Logger)
 	}
 
-	go func() {
-		log.Info().Msgf("main: %q REST service is listening on %q", serviceName, envs.Web.Addr)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatal().Stack().Err(err).Msg("main: Failed to start HTTP server")
+	db, err := dbext.Open(dbCfg)
+	if err != nil {
+		return errors.Wrapf(err, "failed to connect to PostgreSQL, config: %#v", dbCfg)
+	}
+
+	defer func() {
+		if err := db.Close(); err != nil {
+			log.Error().Stack().Err(err).Msg("main: Failed to close db connection")
 		}
 	}()
 
-	sig := <-sigint
+	r := repositories.New(db)
 
-	ctx, cancel := context.WithTimeout(context.Background(), envs.Web.ShutdownTimeout)
-	defer cancel()
-
-	log.Info().Msg("main: Shutdown server")
-	if err := srv.Shutdown(ctx); err != nil {
-		return errors.Wrapf(err, "failed to shutdown server")
+	srv := http.Server{
+		Addr:    envs.Web.Addr,
+		Handler: rest.API(&users.Service{}, r),
 	}
 
-	log.Info().Msgf("main: Terminated via signal %q", sig)
+	apiErr := make(chan error)
+	go func() {
+		log.Info().Msgf("main: %q REST service is listening on %q", serviceName, envs.Web.Addr)
+		apiErr <- srv.ListenAndServe()
+	}()
+
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, syscall.SIGINT)
+
+	select {
+	case err := <-apiErr:
+		return err
+	case sig := <-shutdown:
+		ctx, cancel := context.WithTimeout(context.Background(), envs.Web.ShutdownTimeout)
+		defer cancel()
+
+		log.Info().Msg("main: Shutdown server")
+		if err := srv.Shutdown(ctx); err != nil {
+			return errors.Wrapf(err, "failed to shutdown server")
+		}
+		log.Info().Msgf("main: Terminated via signal %q", sig)
+	}
+
 	return nil
 }
