@@ -26,7 +26,7 @@ const serviceName = "Gosuslugi"
 
 var envs struct {
 	Web struct {
-		Addr            string        `envconfig:"WEB_ADDR"`
+		Addr            string        `envconfig:"WEB_ADDR" default:"localhost:3000"`
 		ShutdownTimeout time.Duration `envconfig:"WEB_SHUTDOWN_TIMEOUT" default:"5s"`
 	}
 	DB struct {
