@@ -26,7 +26,7 @@ const serviceName = "Gosuslugi"
 
 var envs struct {
 	Web struct {
-		Addr            string        `envconfig:"WEB_ADDR" default:"localhost:3000"`
+		Addr            string        `envconfig:"WEB_ADDR" default:":3000"`
 		ShutdownTimeout time.Duration `envconfig:"WEB_SHUTDOWN_TIMEOUT" default:"5s"`
 	}
 	DB struct {
@@ -61,6 +61,10 @@ func run() error {
 	if err := envconfig.Process("", &envs); err != nil {
 		return err
 	}
+
+	log.Info().
+		Interface("envs", envs).
+		Msg("main: ENVs")
 
 	dbCfg := dbext.Config{
 		User:       envs.DB.User,
