@@ -5,8 +5,8 @@ import (
 
 	"github.com/go-chi/render"
 
-	users2 "github.com/egsam98/voting/gosuslugi/cmd/server/handlers/rest/requests/users"
-	responses "github.com/egsam98/voting/gosuslugi/cmd/server/handlers/rest/responses/users"
+	"github.com/egsam98/voting/gosuslugi/cmd/server/handlers/rest/requests/users"
+	"github.com/egsam98/voting/gosuslugi/cmd/server/handlers/rest/responses/users"
 	"github.com/egsam98/voting/gosuslugi/db/queriesdb"
 	"github.com/egsam98/voting/gosuslugi/internal/web"
 	"github.com/egsam98/voting/gosuslugi/services/users"
@@ -22,7 +22,7 @@ func newUsersController(users *users.Service, q *queriesdb.Queries) *usersContro
 }
 
 func (uc *usersController) FindByPassport(w http.ResponseWriter, r *http.Request) {
-	var req users2.FindByPassport
+	var req requests.FindByPassport
 	if err := render.Bind(r, &req); err != nil {
 		web.RespondError(w, r, web.WrapWithError(users.ErrInvalidInput, err))
 		return

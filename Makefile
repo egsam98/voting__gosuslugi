@@ -9,7 +9,7 @@ ifneq (,$(wildcard .env))
 endif
 
 db-create-migration: ## Create migration file in db/migrations directory. Migration should be named by "name" argument. Example: create-migration name=create_foos
-	docker run -v "${PWD}/db/migrations:/migrations" \
+	docker run --rm -v "${PWD}/db/migrations:/migrations" \
 		--network host migrate/migrate \
 		-path=/migrations \
  		create -ext \
@@ -18,7 +18,7 @@ db-create-migration: ## Create migration file in db/migrations directory. Migrat
 	sudo chmod 766 -R db/migrations
 
 db-migrate:
-	docker run -v "${PWD}/db/migrations:/migrations" \
+	docker run --rm -v "${PWD}/db/migrations:/migrations" \
 		--network host \
 		migrate/migrate \
         -path=/migrations/ \
@@ -26,7 +26,7 @@ db-migrate:
         up
 
 db-rollback:
-	docker run -v "${PWD}/db/migrations:/migrations" \
+	docker run --rm -v "${PWD}/db/migrations:/migrations" \
 		--network host migrate/migrate \
 		-path=/migrations \
 		-database postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST)/$(DB_NAME)?sslmode=disable \

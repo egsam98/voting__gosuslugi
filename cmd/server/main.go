@@ -17,7 +17,6 @@ import (
 	"github.com/rs/zerolog/pkgerrors"
 
 	"github.com/egsam98/voting/gosuslugi/cmd/server/handlers/rest"
-	"github.com/egsam98/voting/gosuslugi/db/queriesdb"
 	"github.com/egsam98/voting/gosuslugi/internal/dbext"
 	"github.com/egsam98/voting/gosuslugi/services/users"
 )
@@ -83,16 +82,15 @@ func run() error {
 	}
 
 	defer func() {
+		log.Info().Msg("main: Closing database")
 		if err := db.Close(); err != nil {
 			log.Error().Stack().Err(err).Msg("main: Failed to close db connection")
 		}
 	}()
 
-	q := queriesdb.New(db)
-
 	srv := http.Server{
 		Addr:    envs.Web.Addr,
-		Handler: rest.API(&users.Service{}, q),
+		Handler: rest.API(&users.Service{}, db),
 	}
 
 	apiErr := make(chan error)
@@ -106,16 +104,18 @@ func run() error {
 
 	select {
 	case err := <-apiErr:
-		return err
+		return errors.WithStack(err)
 	case sig := <-shutdown:
+		log.Info().Msgf("main: Received signal %q", sig)
+
 		ctx, cancel := context.WithTimeout(context.Background(), envs.Web.ShutdownTimeout)
 		defer cancel()
 
-		log.Info().Msg("main: Shutdown server")
+		log.Info().Msg("main: Doing server shutdown")
 		if err := srv.Shutdown(ctx); err != nil {
+			_ = srv.Close()
 			return errors.Wrapf(err, "failed to shutdown server")
 		}
-		log.Info().Msgf("main: Terminated via signal %q", sig)
 	}
 
 	return nil
