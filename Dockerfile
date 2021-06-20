@@ -11,9 +11,11 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 go build -o bin/gosuslugi cmd/server/*.go
+ENV CGO_ENABLED 0
+RUN go build -o bin/server cmd/server/*.go
+RUN go build -o bin/seed cmd/seed/*.go
 EXPOSE 3000
 
 FROM scratch
-COPY --from=builder /gosuslugi/bin/gosuslugi .
-ENTRYPOINT ["./gosuslugi"]
+COPY --from=builder /gosuslugi/bin .
+CMD ["./server"]
