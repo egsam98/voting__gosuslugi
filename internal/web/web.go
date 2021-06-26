@@ -12,7 +12,6 @@ func RespondError(w http.ResponseWriter, r *http.Request, err error) {
 	var clientErr *ClientError
 	if errors.As(err, &clientErr) {
 		w.WriteHeader(http.StatusBadRequest)
-		clientErr.Err = err.Error()
 		render.JSON(w, r, clientErr)
 		return
 	}
